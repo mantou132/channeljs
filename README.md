@@ -54,7 +54,7 @@ worker thread:
 const channel = new Channel(self);
 
 channel.onMessage.addListener(data => {
-  console.log('Received worker main message:', data);
+  console.log('Received main thread message:', data);
   // Reply sender
   return 'pong';
 });

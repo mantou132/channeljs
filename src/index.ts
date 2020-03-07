@@ -22,7 +22,7 @@ if (typeof MessageChannel === 'undefined') {
   NativeChannel = MessageChannel;
 }
 
-const Token = 'channeljs';
+const Token = '@@__channeljs__@@';
 
 // Avoid sending and receiving messages with the same id
 let id = 0;
@@ -37,6 +37,10 @@ class Message {
     this.data = data;
     this.id = id;
   }
+}
+
+interface Options {
+  timeout?: number;
 }
 
 export default class Channel {
@@ -104,7 +108,8 @@ export default class Channel {
     },
   };
 
-  sendMessage = async (data: any) => {
+  sendMessage = async (data: any, options: Options = {}) => {
+    const { timeout } = options;
     const msg = new Message(data);
     if (typeof SharedWorkerGlobalScope !== 'undefined' && this._target instanceof SharedWorkerGlobalScope) {
       throw new Error('not support!');
@@ -124,8 +129,14 @@ export default class Channel {
       target.postMessage(msg, [port]);
     }
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       this._messagePending.set(msg.id, resolve);
+      if (timeout) {
+        setTimeout(() => {
+          this._messagePending.delete(msg.id);
+          reject('timeout');
+        }, timeout);
+      }
     });
   };
 }
