@@ -1,0 +1,16 @@
+node_modules
+dist
+
+# Compiler output
+/build/
+/coverage/
+/lib/
+/index.d.ts
+/index.d.ts.map
+/index.js
+/index.js.map
+
+.DS_Store
+logs
+*.log
+npm-debug.log*
