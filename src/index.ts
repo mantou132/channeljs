@@ -73,7 +73,12 @@ export default class Channel {
       port.addEventListener('message', (e: MessageEvent) => this._onMessage(e.data, e.ports[0]));
       port.start();
       // Receipt message
-      const target = this._target as Window;
+      let target: Window;
+      if (typeof Window !== 'undefined' && this._target instanceof Window) {
+        target = window;
+      } else {
+        target = this._target as Window;
+      }
       target.addEventListener('message', (e: MessageEvent) => this._onMessage(e.data, e.ports[0]));
     }
   }
@@ -91,6 +96,7 @@ export default class Channel {
     const resolve = this._messagePending.get(id);
     if (resolve) return resolve(data);
 
+    // reply
     this._eventListenerList.forEach(async callback => {
       const res = await callback(data);
       port?.postMessage(new Message(res, id));
@@ -114,7 +120,7 @@ export default class Channel {
     if (typeof SharedWorkerGlobalScope !== 'undefined' && this._target instanceof SharedWorkerGlobalScope) {
       throw new Error('not support!');
     } else if (typeof Window !== 'undefined' && this._target instanceof Window) {
-      const target = this._target;
+      const target = this._target !== window ? this._target : this._target.parent;
       const port = this._channel.port2 as MessagePort;
       target.postMessage(msg, '*', [port]);
     } else if (typeof SharedWorker !== 'undefined' && this._target instanceof SharedWorker) {
