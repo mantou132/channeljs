@@ -28,14 +28,21 @@ const Token = '@@__channeljs__@@';
 let id = 0;
 const getId = () => `${randomStr(32)}-${++id}`;
 
+enum MessageType {
+  New,
+  Reply,
+}
+
 class Message {
   token = Token;
   id: string;
+  type: MessageType;
   data: any;
 
-  constructor(data: any, id = getId()) {
+  constructor(data: any, type = MessageType.New, id = getId()) {
     this.data = data;
     this.id = id;
+    this.type = type;
   }
 }
 
@@ -90,16 +97,21 @@ export default class Channel {
   _eventListenerList = new Set<Function>();
   _onMessage = (msg: any, port: MessagePort | NodeMessagePort | NodeWorker | undefined) => {
     if (!msg || msg.token !== Token) return;
-    const { id, data } = msg as Message;
+    const { id, data, type } = msg as Message;
 
-    // this's a receipt message
     const resolve = this._messagePending.get(id);
-    if (resolve) return resolve(data);
+    if (resolve) {
+      // self message
+      if (type === MessageType.New) return;
 
-    // reply
+      this._messagePending.delete(id);
+      return resolve(data);
+    }
+
     this._eventListenerList.forEach(async callback => {
       const res = await callback(data);
-      port?.postMessage(new Message(res, id));
+      // reply
+      port?.postMessage(new Message(res, MessageType.Reply, id));
     });
   };
   onMessage = {
