@@ -29,8 +29,8 @@ let id = 0;
 const getId = () => `${randomStr(32)}-${++id}`;
 
 enum MessageType {
-  New,
-  Reply,
+  New = 'new',
+  Reply = 'reply',
 }
 
 class Message {
@@ -132,6 +132,7 @@ export default class Channel {
     if (typeof SharedWorkerGlobalScope !== 'undefined' && this._target instanceof SharedWorkerGlobalScope) {
       throw new Error('not support!');
     } else if (typeof Window !== 'undefined' && this._target instanceof Window) {
+      // Does not support nested iframes
       const target = this._target !== window ? this._target : this._target.parent;
       const port = this._channel.port2 as MessagePort;
       target.postMessage(msg, '*', [port]);

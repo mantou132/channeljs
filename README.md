@@ -59,3 +59,17 @@ channel.onMessage.addListener(data => {
   return 'pong';
 });
 ```
+
+## Integration
+
+You can interact with channeljs in other environments, e.g: Flutter, React-Native.
+You only need to send and process messages in the following format.
+
+```ts
+interface ChannelMessage {
+  token: '@@__channeljs__@@';
+  type: 'new' | 'reply';
+  id: string; // Unique id if new message, source id if reply
+  data: any;
+}
+```
